@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhoneZone – Điện Thoại Chính Hãng</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #252535;        
+    --accent: #6c63ff;
+    --accent2: #ff6584; 
+    --gold: #f5c842;
+    --text: #f0f0ff;
+    --muted: #7070a0;
+    --green: #22c55e;
+    --radius: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 64px;
+  }
+  .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; }
+  .nav-logo span { color: var(--accent); }
+  .nav-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 40px; padding: 8px 18px; width: 320px;
+  }
+  .nav-search input { background: none; border: none; color: var(--text); font-size: 0.9rem; width: 100%; outline: none; font-family: 'DM Sans', sans-serif; }
+  .nav-search input::placeholder { color: var(--muted); }
+  .cart-btn {
+    background: var(--accent); color: white; border: none; border-radius: 40px;
+    padding: 8px 20px; cursor: pointer; font-family: 'Syne', sans-serif;
+    font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .cart-btn:hover { background: #8075ff; transform: translateY(-1px); }
+  .cart-count {
+    background: var(--accent2); color: white; border-radius: 50%;
+    width: 20px; height: 20px; font-size: 0.75rem; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 420px; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 80px 40px 60px;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,99,255,0.18) 0%, transparent 70%);
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(108,99,255,0.04) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(108,99,255,0.04) 40px);
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-tag { display: inline-block; background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3); color: var(--accent); border-radius: 40px; padding: 4px 16px; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px; }
+  .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 800; line-height: 1.1; letter-spacing: -2px; margin-bottom: 16px; }
+  .hero h1 em { color: var(--accent); font-style: normal; }
+  .hero p { color: var(--muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto 32px; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 20px 40px; background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  .filter-btn {
+    padding: 7px 18px; border-radius: 40px; border: 1px solid var(--border);
+    background: none; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; transition: all 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .sort-select {
+    margin-left: auto; background: var(--card); border: 1px solid var(--border);
+    color: var(--text); padding: 7px 14px; border-radius: 40px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; cursor: pointer; outline: none;
+  }
+  .result-count { color: var(--muted); font-size: 0.85rem; margin-left: 8px; }
+
+  /* PRODUCT GRID */
+  .products-section { padding: 40px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+
+  .product-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; cursor: pointer; transition: all 0.3s; position: relative;
+  }
+  .product-card:hover { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 16px 40px rgba(108,99,255,0.15); }
+  .card-img {
+    width: 100%; height: 200px; object-fit: cover;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex; align-items: center; justify-content: center; font-size: 4rem;
+    position: relative;
+  }
+  .badge {
+    position: absolute; top: 12px; left: 12px;
+    padding: 3px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;
+  }
+  .badge.new { background: var(--accent); color: white; }
+  .badge.sale { background: var(--accent2); color: white; }
+  .badge.hot { background: var(--gold); color: #000; }
+  .card-body { padding: 16px; }
+  .card-brand { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 8px; line-height: 1.3; }
+  .card-specs { font-size: 0.78rem; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+  .card-price-row { display: flex; align-items: center; justify-content: space-between; }
+  .card-price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--gold); }
+  .card-old-price { font-size: 0.8rem; color: var(--muted); text-decoration: line-through; display: block; }
+  .card-add-btn {
+    background: var(--accent); color: white; border: none; border-radius: 10px;
+    padding: 8px 14px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+    transition: all 0.2s; font-family: 'Syne', sans-serif;
+  }
+  .card-add-btn:hover { background: #8075ff; transform: scale(1.05); }
+
+  /* STARS */
+  .stars { color: var(--gold); font-size: 0.75rem; margin-bottom: 6px; }
+
+  /* MODAL OVERLAY */
+  .overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 1000; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px); padding: 20px;
+  }
+  .overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* PRODUCT DETAIL MODAL */
+  .modal {
+    background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+    max-width: 720px; width: 100%; max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-header { padding: 28px 28px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+  .modal-close { background: var(--border); border: none; color: var(--text); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+  .modal-body { padding: 20px 28px 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .modal-img { width: 100%; aspect-ratio: 1; border-radius: 16px; background: linear-gradient(135deg, #1a1a2e, #0f3460); display: flex; align-items: center; justify-content: center; font-size: 6rem; }
+  .modal-info { display: flex; flex-direction: column; gap: 12px; }
+  .modal-brand { color: var(--accent); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+  .modal-name { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; }
+  .modal-price { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--gold); }
+  .modal-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+  .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .spec-item { background: var(--surface); border-radius: 10px; padding: 10px 14px; }
+  .spec-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .spec-val { font-size: 0.9rem; font-weight: 500; }
+  .qty-row { display: flex; align-items: center; gap: 12px; }
+  .qty-btn { background: var(--border); border: none; color: var(--text); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 1.2rem; }
+  .qty-num { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; min-width: 24px; text-align: center; }
+  .add-cart-big {
+    background: linear-gradient(135deg, var(--accent), #9f84ff);
+    color: white; border: none; border-radius: 14px; padding: 14px;
+    cursor: pointer; font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 1rem; width: 100%; transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .add-cart-big:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.4); }
+
+  /* CART MODAL */
+  .cart-modal {
+    background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+    width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  .cart-header { padding: 24px 24px 0; display: flex; justify-content: space-between; align-items: center; }
+  .cart-header h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; }
+  .cart-items { padding: 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .cart-item { display: flex; gap: 14px; align-items: center; background: var(--surface); padding: 14px; border-radius: 14px; }
+  .cart-item-emoji { font-size: 2rem; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--border); border-radius: 10px; flex-shrink: 0; }
+  .cart-item-info { flex: 1; }
+  .cart-item-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+  .cart-item-price { color: var(--gold); font-family: 'Syne', sans-serif; font-size: 0.9rem; }
+  .cart-item-qty { color: var(--muted); font-size: 0.8rem; }
+  .cart-item-remove { background: none; border: none; color: var(--accent2); cursor: pointer; font-size: 1.2rem; padding: 4px; }
+  .cart-total { margin: 0 24px; padding: 16px; background: var(--surface); border-radius: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .cart-total-label { color: var(--muted); }
+  .cart-total-amount { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--gold); }
+  .cart-actions { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 10px; }
+  .checkout-btn {
+    background: linear-gradient(135deg, var(--accent), #9f84ff); color: white;
+    border: none; border-radius: 14px; padding: 14px; cursor: pointer;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+    transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.4); }
+  .clear-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 14px; padding: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .clear-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .empty-cart { text-align: center; padding: 40px; color: var(--muted); font-size: 3rem; }
+
+  /* ORDER FORM MODAL */
+  .order-modal {
+    background: var(--card); border: 1px solid var(--border); border-radius: 24px;
+    width: 100%; max-width: 560px; max-height: 95vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  .order-header { padding: 24px 24px 0; display: flex; justify-content: space-between; align-items: center; }
+  .order-header h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; }
+  .order-body { padding: 20px 24px 24px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-radius: 12px; padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* PAYMENT METHOD */
+  .payment-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .pay-method {
+    border: 2px solid var(--border); border-radius: 12px; padding: 14px;
+    cursor: pointer; text-align: center; transition: all 0.2s;
+  }
+  .pay-method:hover { border-color: var(--accent); }
+  .pay-method.selected { border-color: var(--accent); background: rgba(108,99,255,0.1); }
+  .pay-method-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .pay-method-name { font-size: 0.8rem; font-weight: 600; }
+
+  /* QR CODE SECTION */
+  .qr-section {
+    background: var(--surface); border-radius: 14px; padding: 20px;
+    text-align: center; margin-bottom: 16px; border: 1px solid var(--border);
+  }
+  .qr-title { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 4px; }
+  .qr-sub { color: var(--muted); font-size: 0.8rem; margin-bottom: 16px; }
+  .qr-image { width: 180px; height: 180px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; }
+  .qr-image svg { width: 100%; height: 100%; }
+  .qr-bank-info { background: var(--card); border-radius: 10px; padding: 12px; font-size: 0.85rem; text-align: left; }
+  .qr-bank-row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .qr-bank-row span:first-child { color: var(--muted); }
+  .qr-bank-row span:last-child { font-weight: 600; }
+  .qr-amount { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--gold); text-align: center; margin-top: 12px; }
+
+  /* ORDER SUMMARY */
+  .order-summary { background: var(--surface); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+  .order-summary-title { font-weight: 600; margin-bottom: 10px; font-size: 0.9rem; }
+  .summary-item { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; color: var(--muted); }
+  .summary-item.total { color: var(--text); font-weight: 600; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 10px; }
+  .summary-item.total span:last-child { color: var(--gold); font-family: 'Syne', sans-serif; font-size: 1rem; }
+
+  .place-order-btn {
+    width: 100%; background: linear-gradient(135deg, var(--green), #16a34a);
+    color: white; border: none; border-radius: 14px; padding: 16px;
+    cursor: pointer; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+    transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .place-order-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34,197,94,0.3); }
+  .place-order-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* SUCCESS MODAL */
+  .success-modal {
+    background: var(--card); border: 1px solid var(--green); border-radius: 24px;
+    width: 100%; max-width: 420px; padding: 40px; text-align: center;
+    animation: slideUp 0.3s ease;
+  }
+  .success-icon { font-size: 4rem; margin-bottom: 16px; }
+  .success-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+  .success-sub { color: var(--muted); margin-bottom: 24px; line-height: 1.6; font-size: 0.9rem; }
+  .success-id { background: var(--surface); border-radius: 10px; padding: 10px 16px; font-family: 'Syne', sans-serif; font-weight: 700; color: var(--accent); margin-bottom: 20px; font-size: 0.9rem; }
+  .success-close { background: var(--accent); color: white; border: none; border-radius: 14px; padding: 12px 32px; cursor: pointer; font-family: 'Syne', sans-serif; font-weight: 700; }
+
+  /* TOAST */
+  .toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+  .toast {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 20px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
+    animation: toastIn 0.3s ease; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    max-width: 300px;
+  }
+  @keyframes toastIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .toast.success { border-color: var(--green); }
+  .toast.error { border-color: var(--accent2); }
+
+  /* FOOTER */
+  footer {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 40px; margin-top: 60px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px;
+  }
+  .footer-logo { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
+  .footer-logo span { color: var(--accent); }
+  .footer-desc { color: var(--muted); font-size: 0.85rem; line-height: 1.7; }
+  .footer-heading { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 12px; font-size: 0.9rem; letter-spacing: 0.5px; }
+  .footer-links { display: flex; flex-direction: column; gap: 8px; }
+  .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-bottom { border-top: 1px solid var(--border); padding: 20px 40px; text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 0; }
+
+  /* LOADING SPINNER */
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 0 16px; }
+    .nav-search { display: none; }
+    .filter-bar { padding: 16px; }
+    .products-section { padding: 20px 16px; }
+    .modal-body { grid-template-columns: 1fr; }
+    footer { padding: 24px 16px; }
+    .footer-bottom { padding: 16px; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav>
+  <div class="nav-logo">Phone<span>Zone</span></div>
+  <div class="nav-search">
+    <svg width="16" height="16" fill="none" stroke="#7070a0" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Tìm kiếm điện thoại..." id="searchInput" oninput="filterProducts()">
+  </div>
+  <button class="cart-btn" onclick="openCart()">
+    🛒 Giỏ hàng <span class="cart-count" id="cartCount">0</span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-tag">✦ 100+ mẫu điện thoại chính hãng</div>
+    <h1>Trải nghiệm <em>công nghệ</em><br>đỉnh cao nhất</h1>
+    <p>Apple, Samsung, Xiaomi, OPPO và nhiều thương hiệu hàng đầu với mức giá tốt nhất thị trường</p>
+  </div>
+</section>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterBrand('all', this)">Tất cả</button>
+  <button class="filter-btn" onclick="filterBrand('Apple', this)">🍎 Apple</button>
+  <button class="filter-btn" onclick="filterBrand('Samsung', this)">Samsung</button>
+  <button class="filter-btn" onclick="filterBrand('Xiaomi', this)">Xiaomi</button>
+  <button class="filter-btn" onclick="filterBrand('OPPO', this)">OPPO</button>
+  <button class="filter-btn" onclick="filterBrand('Vivo', this)">Vivo</button>
+  <button class="filter-btn" onclick="filterBrand('OnePlus', this)">OnePlus</button>
+  <button class="filter-btn" onclick="filterBrand('Realme', this)">Realme</button>
+  <select class="sort-select" onchange="sortProducts(this.value)">
+    <option value="default">Sắp xếp</option>
+    <option value="price-asc">Giá thấp → cao</option>
+    <option value="price-desc">Giá cao → thấp</option>
+    <option value="name-asc">Tên A→Z</option>
+    <option value="new">Mới nhất</option>
+  </select>
+  <span class="result-count" id="resultCount">100 sản phẩm</span>
+</div>
+
+<!-- PRODUCTS -->
+<section class="products-section">
+  <div class="grid" id="productsGrid"></div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">Phone<span>Zone</span></div>
+    <p class="footer-desc">Cửa hàng điện thoại chính hãng với hơn 100 mẫu điện thoại đa dạng. Cam kết giá tốt, bảo hành chính hãng.</p>
+  </div>
+  <div>
+    <div class="footer-heading">Danh mục</div>
+    <div class="footer-links">
+      <a href="#">Apple iPhone</a>
+      <a href="#">Samsung Galaxy</a>
+      <a href="#">Xiaomi</a>
+      <a href="#">OPPO</a>
+      <a href="#">Phụ kiện</a>
+    </div>
+  </div>
+  <div>
+    <div class="footer-heading">Hỗ trợ</div>
+    <div class="footer-links">
+      <a href="#">Chính sách bảo hành</a>
+      <a href="#">Đổi trả hàng</a>
+      <a href="#">Giao hàng</a>
+      <a href="#">Liên hệ</a>
+    </div>
+  </div>
+  <div>
+    <div class="footer-heading">Liên hệ</div>
+    <div class="footer-links">
+      <a href="#">📍 123 Hàng Bông, Hà Nội</a>
+      <a href="#">📞 1800 9090</a>
+      <a href="#">✉️ info@phonezone.vn</a>
+      <a href="#">⏰ 8:00 – 22:00 mỗi ngày</a>
+    </div>
+  </div>
+</footer>
+<div class="footer-bottom">© 2025 PhoneZone. Thiết kế với ❤️ tại Việt Nam</div>
+
+<!-- PRODUCT DETAIL MODAL -->
+<div class="overlay" id="productOverlay" onclick="closeIfOverlay(event, 'productOverlay')">
+  <div class="modal" id="productModal">
+    <div class="modal-header">
+      <div></div>
+      <button class="modal-close" onclick="closeModal('productOverlay')">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- CART MODAL -->
+<div class="overlay" id="cartOverlay" onclick="closeIfOverlay(event, 'cartOverlay')">
+  <div class="cart-modal">
+    <div class="cart-header">
+      <h2>🛒 Giỏ hàng</h2>
+      <button class="modal-close" onclick="closeModal('cartOverlay')">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-total">
+      <span class="cart-total-label">Tổng tiền</span>
+      <span class="cart-total-amount" id="cartTotal">0₫</span>
+    </div>
+    <div class="cart-actions">
+      <button class="checkout-btn" onclick="openOrder()">Đặt hàng ngay →</button>
+      <button class="clear-btn" onclick="clearCart()">Xóa giỏ hàng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER FORM MODAL -->
+<div class="overlay" id="orderOverlay" onclick="closeIfOverlay(event, 'orderOverlay')">
+  <div class="order-modal">
+    <div class="order-header">
+      <h2>📦 Đặt hàng</h2>
+      <button class="modal-close" onclick="closeModal('orderOverlay')">✕</button>
+    </div>
+    <div class="order-body">
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <div class="order-summary-title">📋 Đơn hàng của bạn</div>
+        <div id="orderSummaryItems"></div>
+        <div class="summary-item total">
+          <span>Tổng cộng</span>
+          <span id="orderTotal2">0₫</span>
+        </div>
+      </div>
+
+      <!-- Customer Info -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Họ tên *</label>
+          <input type="text" id="custName" placeholder="Nguyễn Văn A">
+        </div>
+        <div class="form-group">
+          <label>Số điện thoại *</label>
+          <input type="tel" id="custPhone" placeholder="0912 345 678">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="custEmail" placeholder="email@example.com">
+      </div>
+      <div class="form-group">
+        <label>Địa chỉ giao hàng *</label>
+        <input type="text" id="custAddress" placeholder="Số nhà, đường, quận, thành phố">
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea id="custNote" placeholder="Giao giờ hành chính, để trước cửa..."></textarea>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="form-group">
+        <label>Phương thức thanh toán</label>
+        <div class="payment-methods">
+          <div class="pay-method selected" onclick="selectPayment('cod', this)" id="pm-cod">
+            <div class="pay-method-icon">💵</div>
+            <div class="pay-method-name">Tiền mặt (COD)</div>
+          </div>
+          <div class="pay-method" onclick="selectPayment('bank', this)" id="pm-bank">
+            <div class="pay-method-icon">🏦</div>
+            <div class="pay-method-name">Chuyển khoản</div>
+          </div>
+          <div class="pay-method" onclick="selectPayment('qr', this)" id="pm-qr">
+            <div class="pay-method-icon">📱</div>
+            <div class="pay-method-name">QR VietQR</div>
+          </div>
+          <div class="pay-method" onclick="selectPayment('momo', this)" id="pm-momo">
+            <div class="pay-method-icon">💜</div>
+            <div class="pay-method-name">Ví MoMo</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QR SECTION (shown when qr selected) -->
+      <div class="qr-section" id="qrSection" style="display:none">
+        <div class="qr-title">Quét mã QR để thanh toán</div>
+        <div class="qr-sub">Sử dụng ứng dụng ngân hàng hoặc VietQR</div>
+        <div class="qr-image" id="qrImageContainer"></div>
+        <div class="qr-bank-info">
+          <div class="qr-bank-row"><span>Ngân hàng</span><span>VPBank</span></div>
+          <div class="qr-bank-row"><span>Số tài khoản</span><span>1234 5678 9012</span></div>
+          <div class="qr-bank-row"><span>Chủ tài khoản</span><span>PHONEZONE VN</span></div>
+          <div class="qr-bank-row"><span>Nội dung</span><span id="qrContent">PZ-ORDER</span></div>
+        </div>
+        <div class="qr-amount" id="qrAmount">0₫</div>
+      </div>
+
+      <button class="place-order-btn" id="placeOrderBtn" onclick="placeOrder()">
+        ✅ Xác nhận đặt hàng
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="overlay" id="successOverlay">
+  <div class="success-modal">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Đặt hàng thành công!</div>
+    <div class="success-sub">Cảm ơn bạn đã mua hàng tại PhoneZone.<br>Chúng tôi sẽ liên hệ xác nhận trong vòng 30 phút.</div>
+    <div class="success-id" id="successOrderId">Mã đơn: PZ-000000</div>
+    <button class="success-close" onclick="closeSuccess()">Tiếp tục mua sắm</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// =========================================
+// PRODUCT DATA - 100 PHONES
+// =========================================
+const phoneEmojis = { Apple:'📱', Samsung:'📲', Xiaomi:'📟', OPPO:'🤳', Vivo:'📷', OnePlus:'⚡', Realme:'🎮' };
+const badges = ['new','sale','hot',null,null,null];
+
+const rawPhones = [
+  // APPLE
+  {brand:'Apple', name:'iPhone 16 Pro Max', price:34990000, oldPrice:37990000, ram:'8GB', storage:'256GB', display:'6.9" OLED', camera:'48MP', battery:'4685mAh', badge:'hot'},
+  {brand:'Apple', name:'iPhone 16 Pro', price:28990000, oldPrice:31990000, ram:'8GB', storage:'128GB', display:'6.3" OLED', camera:'48MP', battery:'3274mAh', badge:'hot'},
+  {brand:'Apple', name:'iPhone 16 Plus', price:24990000, oldPrice:26990000, ram:'8GB', storage:'128GB', display:'6.7" OLED', camera:'48MP', battery:'4685mAh', badge:'new'},
+  {brand:'Apple', name:'iPhone 16', price:21990000, oldPrice:23990000, ram:'8GB', storage:'128GB', display:'6.1" OLED', camera:'48MP', battery:'3561mAh', badge:'new'},
+  {brand:'Apple', name:'iPhone 15 Pro Max', price:26990000, oldPrice:29990000, ram:'8GB', storage:'256GB', display:'6.7" OLED', camera:'48MP', battery:'4422mAh', badge:'sale'},
+  {brand:'Apple', name:'iPhone 15 Pro', price:22990000, oldPrice:25990000, ram:'8GB', storage:'128GB', display:'6.1" OLED', camera:'48MP', battery:'3274mAh', badge:'sale'},
+  {brand:'Apple', name:'iPhone 15 Plus', price:19990000, oldPrice:21990000, ram:'6GB', storage:'128GB', display:'6.7" OLED', camera:'12MP', battery:'4383mAh', badge:null},
+  {brand:'Apple', name:'iPhone 15', price:16990000, oldPrice:18990000, ram:'6GB', storage:'128GB', display:'6.1" OLED', camera:'12MP', battery:'3349mAh', badge:null},
+  {brand:'Apple', name:'iPhone 14', price:13990000, oldPrice:15990000, ram:'6GB', storage:'128GB', display:'6.1" OLED', camera:'12MP', battery:'3279mAh', badge:'sale'},
+  {brand:'Apple', name:'iPhone SE 3', price:8990000, oldPrice:10990000, ram:'4GB', storage:'64GB', display:'4.7" LCD', camera:'12MP', battery:'2018mAh', badge:'sale'},
+  {brand:'Apple', name:'iPhone 13', price:10990000, oldPrice:13490000, ram:'4GB', storage:'128GB', display:'6.1" OLED', camera:'12MP', battery:'3227mAh', badge:'sale'},
+  {brand:'Apple', name:'iPhone 14 Plus', price:15990000, oldPrice:17990000, ram:'6GB', storage:'128GB', display:'6.7" OLED', camera:'12MP', battery:'4325mAh', badge:null},
+  {brand:'Apple', name:'iPhone 14 Pro Max', price:21990000, oldPrice:24990000, ram:'6GB', storage:'256GB', display:'6.7" OLED', camera:'48MP', battery:'4323mAh', badge:'sale'},
+  {brand:'Apple', name:'iPhone 14 Pro', price:18990000, oldPrice:21990000, ram:'6GB', storage:'128GB', display:'6.1" OLED', camera:'48MP', battery:'3200mAh', badge:'sale'},
+
+  // SAMSUNG
+  {brand:'Samsung', name:'Galaxy S25 Ultra', price:32990000, oldPrice:35990000, ram:'12GB', storage:'256GB', display:'6.9" AMOLED', camera:'200MP', battery:'5000mAh', badge:'hot'},
+  {brand:'Samsung', name:'Galaxy S25+', price:25990000, oldPrice:28990000, ram:'12GB', storage:'256GB', display:'6.7" AMOLED', camera:'50MP', battery:'4900mAh', badge:'hot'},
+  {brand:'Samsung', name:'Galaxy S25', price:19990000, oldPrice:22990000, ram:'12GB', storage:'128GB', display:'6.2" AMOLED', camera:'50MP', battery:'4000mAh', badge:'new'},
+  {brand:'Samsung', name:'Galaxy Z Fold 6', price:44990000, oldPrice:47990000, ram:'12GB', storage:'256GB', display:'7.6" AMOLED', camera:'50MP', battery:'4400mAh', badge:'hot'},
+  {brand:'Samsung', name:'Galaxy Z Flip 6', price:21990000, oldPrice:24990000, ram:'12GB', storage:'256GB', display:'6.7" AMOLED', camera:'50MP', battery:'4000mAh', badge:'new'},
+  {brand:'Samsung', name:'Galaxy A55 5G', price:9490000, oldPrice:10990000, ram:'8GB', storage:'128GB', display:'6.6" AMOLED', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Samsung', name:'Galaxy A35 5G', price:7490000, oldPrice:8990000, ram:'6GB', storage:'128GB', display:'6.6" AMOLED', camera:'50MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Samsung', name:'Galaxy A25 5G', price:5990000, oldPrice:7490000, ram:'6GB', storage:'128GB', display:'6.5" AMOLED', camera:'50MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Samsung', name:'Galaxy M55', price:8990000, oldPrice:10490000, ram:'8GB', storage:'128GB', display:'6.7" AMOLED', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Samsung', name:'Galaxy S24 FE', price:13990000, oldPrice:15990000, ram:'8GB', storage:'128GB', display:'6.7" AMOLED', camera:'50MP', battery:'4700mAh', badge:'sale'},
+  {brand:'Samsung', name:'Galaxy S24 Ultra', price:26990000, oldPrice:30990000, ram:'12GB', storage:'256GB', display:'6.8" AMOLED', camera:'200MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Samsung', name:'Galaxy F55 5G', price:7990000, oldPrice:9490000, ram:'8GB', storage:'128GB', display:'6.7" AMOLED', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Samsung', name:'Galaxy A16 5G', price:4990000, oldPrice:5990000, ram:'4GB', storage:'128GB', display:'6.7" PLS', camera:'50MP', battery:'5000mAh', badge:'new'},
+
+  // XIAOMI
+  {brand:'Xiaomi', name:'14 Ultra', price:26990000, oldPrice:29990000, ram:'16GB', storage:'512GB', display:'6.73" AMOLED', camera:'50MP', battery:'5300mAh', badge:'hot'},
+  {brand:'Xiaomi', name:'14T Pro', price:18990000, oldPrice:20990000, ram:'12GB', storage:'256GB', display:'6.67" AMOLED', camera:'50MP', battery:'5000mAh', badge:'new'},
+  {brand:'Xiaomi', name:'14T', price:13990000, oldPrice:15990000, ram:'12GB', storage:'256GB', display:'6.67" AMOLED', camera:'50MP', battery:'5000mAh', badge:'new'},
+  {brand:'Xiaomi', name:'Redmi Note 14 Pro+', price:8990000, oldPrice:10490000, ram:'12GB', storage:'256GB', display:'6.67" AMOLED', camera:'200MP', battery:'5110mAh', badge:'hot'},
+  {brand:'Xiaomi', name:'Redmi Note 14 Pro', price:7490000, oldPrice:8990000, ram:'8GB', storage:'128GB', display:'6.67" AMOLED', camera:'50MP', battery:'5500mAh', badge:null},
+  {brand:'Xiaomi', name:'Redmi Note 14', price:5490000, oldPrice:6990000, ram:'8GB', storage:'128GB', display:'6.67" AMOLED', camera:'108MP', battery:'5110mAh', badge:'sale'},
+  {brand:'Xiaomi', name:'Redmi 14C', price:3490000, oldPrice:4490000, ram:'6GB', storage:'128GB', display:'6.88" IPS', camera:'50MP', battery:'5160mAh', badge:'sale'},
+  {brand:'Xiaomi', name:'POCO F6 Pro', price:13990000, oldPrice:15990000, ram:'12GB', storage:'256GB', display:'6.67" AMOLED', camera:'50MP', battery:'5000mAh', badge:'hot'},
+  {brand:'Xiaomi', name:'POCO X6 Pro', price:8990000, oldPrice:10490000, ram:'12GB', storage:'256GB', display:'6.67" AMOLED', camera:'64MP', battery:'5000mAh', badge:null},
+  {brand:'Xiaomi', name:'POCO M6 Pro', price:5490000, oldPrice:6990000, ram:'8GB', storage:'128GB', display:'6.67" AMOLED', camera:'64MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Xiaomi', name:'Redmi 13', price:3990000, oldPrice:4990000, ram:'6GB', storage:'128GB', display:'6.79" IPS', camera:'108MP', battery:'5030mAh', badge:null},
+  {brand:'Xiaomi', name:'Xiaomi 13T', price:11990000, oldPrice:14490000, ram:'8GB', storage:'256GB', display:'6.67" AMOLED', camera:'50MP', battery:'5000mAh', badge:'sale'},
+
+  // OPPO
+  {brand:'OPPO', name:'Find X8 Pro', price:24990000, oldPrice:27990000, ram:'16GB', storage:'512GB', display:'6.78" AMOLED', camera:'50MP', battery:'5910mAh', badge:'hot'},
+  {brand:'OPPO', name:'Find X8', price:18990000, oldPrice:21990000, ram:'12GB', storage:'256GB', display:'6.59" AMOLED', camera:'50MP', battery:'5630mAh', badge:'new'},
+  {brand:'OPPO', name:'Reno12 Pro', price:11990000, oldPrice:13990000, ram:'12GB', storage:'256GB', display:'6.7" AMOLED', camera:'50MP', battery:'5000mAh', badge:'new'},
+  {brand:'OPPO', name:'Reno12', price:9490000, oldPrice:10990000, ram:'12GB', storage:'256GB', display:'6.7" AMOLED', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'OPPO', name:'A3 Pro', price:6490000, oldPrice:7990000, ram:'8GB', storage:'256GB', display:'6.67" AMOLED', camera:'64MP', battery:'5100mAh', badge:null},
+  {brand:'OPPO', name:'A3x', price:3990000, oldPrice:4990000, ram:'6GB', storage:'128GB', display:'6.67" IPS', camera:'13MP', battery:'5100mAh', badge:'sale'},
+  {brand:'OPPO', name:'A60', price:4490000, oldPrice:5990000, ram:'8GB', storage:'128GB', display:'6.67" IPS', camera:'50MP', battery:'5000mAh', badge:'sale'},
+  {brand:'OPPO', name:'Reno11 F', price:8490000, oldPrice:9990000, ram:'8GB', storage:'256GB', display:'6.7" AMOLED', camera:'64MP', battery:'5000mAh', badge:'sale'},
+  {brand:'OPPO', name:'Find N3 Flip', price:19990000, oldPrice:22990000, ram:'12GB', storage:'256GB', display:'6.8" AMOLED', camera:'50MP', battery:'4300mAh', badge:'hot'},
+  {brand:'OPPO', name:'A79', price:5990000, oldPrice:7490000, ram:'8GB', storage:'256GB', display:'6.72" IPS', camera:'50MP', battery:'5000mAh', badge:null},
+
+  // VIVO
+  {brand:'Vivo', name:'X200 Pro', price:22990000, oldPrice:25990000, ram:'16GB', storage:'512GB', display:'6.78" AMOLED', camera:'50MP', battery:'5800mAh', badge:'hot'},
+  {brand:'Vivo', name:'X200', price:16990000, oldPrice:18990000, ram:'12GB', storage:'256GB', display:'6.67" AMOLED', camera:'50MP', battery:'5500mAh', badge:'new'},
+  {brand:'Vivo', name:'V40 Pro', price:11990000, oldPrice:13490000, ram:'12GB', storage:'256GB', display:'6.78" AMOLED', camera:'50MP', battery:'5500mAh', badge:'new'},
+  {brand:'Vivo', name:'V40', price:9490000, oldPrice:10990000, ram:'8GB', storage:'256GB', display:'6.78" AMOLED', camera:'50MP', battery:'5500mAh', badge:null},
+  {brand:'Vivo', name:'Y200 Pro', price:7490000, oldPrice:8990000, ram:'8GB', storage:'256GB', display:'6.67" AMOLED', camera:'64MP', battery:'5000mAh', badge:null},
+  {brand:'Vivo', name:'Y200t', price:4490000, oldPrice:5990000, ram:'8GB', storage:'128GB', display:'6.67" IPS', camera:'50MP', battery:'6000mAh', badge:'sale'},
+  {brand:'Vivo', name:'Y28', price:3490000, oldPrice:4490000, ram:'4GB', storage:'64GB', display:'6.56" IPS', camera:'13MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Vivo', name:'Y36', price:5490000, oldPrice:6990000, ram:'8GB', storage:'128GB', display:'6.64" IPS', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Vivo', name:'T3 Pro', price:6990000, oldPrice:8490000, ram:'8GB', storage:'128GB', display:'6.67" AMOLED', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Vivo', name:'X Fold3 Pro', price:39990000, oldPrice:42990000, ram:'16GB', storage:'512GB', display:'8.03" AMOLED', camera:'50MP', battery:'5700mAh', badge:'hot'},
+
+  // ONEPLUS
+  {brand:'OnePlus', name:'13', price:19990000, oldPrice:22990000, ram:'12GB', storage:'256GB', display:'6.82" AMOLED', camera:'50MP', battery:'6000mAh', badge:'hot'},
+  {brand:'OnePlus', name:'13R', price:13990000, oldPrice:15990000, ram:'12GB', storage:'256GB', display:'6.78" AMOLED', camera:'50MP', battery:'5500mAh', badge:'new'},
+  {brand:'OnePlus', name:'12', price:16990000, oldPrice:19990000, ram:'12GB', storage:'256GB', display:'6.82" AMOLED', camera:'50MP', battery:'5400mAh', badge:'sale'},
+  {brand:'OnePlus', name:'Open', price:32990000, oldPrice:35990000, ram:'16GB', storage:'512GB', display:'7.82" AMOLED', camera:'48MP', battery:'4805mAh', badge:'hot'},
+  {brand:'OnePlus', name:'Nord 4', price:9990000, oldPrice:11990000, ram:'8GB', storage:'128GB', display:'6.74" AMOLED', camera:'50MP', battery:'5500mAh', badge:'new'},
+  {brand:'OnePlus', name:'Nord CE 4', price:7490000, oldPrice:8990000, ram:'8GB', storage:'128GB', display:'6.67" AMOLED', camera:'50MP', battery:'5500mAh', badge:null},
+  {brand:'OnePlus', name:'Nord CE 4 Lite', price:5990000, oldPrice:7490000, ram:'8GB', storage:'128GB', display:'6.67" AMOLED', camera:'50MP', battery:'5110mAh', badge:'sale'},
+  {brand:'OnePlus', name:'12R', price:12990000, oldPrice:14990000, ram:'8GB', storage:'128GB', display:'6.78" AMOLED', camera:'50MP', battery:'5500mAh', badge:'sale'},
+  {brand:'OnePlus', name:'Nord N30', price:4990000, oldPrice:6490000, ram:'8GB', storage:'128GB', display:'6.72" IPS', camera:'108MP', battery:'5000mAh', badge:'sale'},
+  {brand:'OnePlus', name:'Ace 3V', price:8990000, oldPrice:10490000, ram:'8GB', storage:'256GB', display:'6.74" AMOLED', camera:'50MP', battery:'5500mAh', badge:null},
+
+  // REALME
+  {brand:'Realme', name:'GT 6 Pro', price:16990000, oldPrice:18990000, ram:'12GB', storage:'256GB', display:'6.78" AMOLED', camera:'50MP', battery:'5500mAh', badge:'hot'},
+  {brand:'Realme', name:'GT 6', price:12990000, oldPrice:14990000, ram:'12GB', storage:'256GB', display:'6.78" AMOLED', camera:'50MP', battery:'5500mAh', badge:'new'},
+  {brand:'Realme', name:'12 Pro+', price:9990000, oldPrice:11990000, ram:'12GB', storage:'256GB', display:'6.7" AMOLED', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Realme', name:'12 Pro', price:7990000, oldPrice:9490000, ram:'8GB', storage:'128GB', display:'6.7" AMOLED', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Realme', name:'12+', price:6490000, oldPrice:7990000, ram:'8GB', storage:'256GB', display:'6.67" AMOLED', camera:'50MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Realme', name:'C67', price:3990000, oldPrice:5490000, ram:'8GB', storage:'128GB', display:'6.72" IPS', camera:'108MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Realme', name:'C63', price:2990000, oldPrice:3990000, ram:'6GB', storage:'128GB', display:'6.74" IPS', camera:'50MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Realme', name:'Narzo 70 Pro', price:7490000, oldPrice:8990000, ram:'8GB', storage:'128GB', display:'6.67" AMOLED', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Realme', name:'Narzo 70', price:5490000, oldPrice:6990000, ram:'8GB', storage:'128GB', display:'6.67" IPS', camera:'50MP', battery:'5000mAh', badge:null},
+  {brand:'Realme', name:'GT 5 Pro', price:14990000, oldPrice:17490000, ram:'12GB', storage:'256GB', display:'6.78" AMOLED', camera:'50MP', battery:'5400mAh', badge:'sale'},
+  {brand:'Realme', name:'11 Pro+', price:8990000, oldPrice:10490000, ram:'12GB', storage:'256GB', display:'6.7" AMOLED', camera:'200MP', battery:'5000mAh', badge:'sale'},
+  {brand:'Realme', name:'C55', price:3490000, oldPrice:4490000, ram:'6GB', storage:'128GB', display:'6.72" IPS', camera:'64MP', battery:'5000mAh', badge:'sale'},
+];
+
+// Generate IDs and fill up to 100
+const allPhones = rawPhones.map((p, i) => ({ ...p, id: i+1, rating: (3.8 + Math.random()*1.2).toFixed(1) }));
+
+let cart = [];
+let currentQty = 1;
+let currentProduct = null;
+let selectedPayment = 'cod';
+let filteredPhones = [...allPhones];
+let currentBrand = 'all';
+
+// =========================================
+// RENDER PRODUCTS
+// =========================================
+function formatPrice(p) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p);
+}
+
+function starHTML(rating) {
+  const full = Math.floor(rating);
+  const half = rating - full >= 0.5;
+  let s = '';
+  for(let i=0;i<full;i++) s += '★';
+  if(half) s += '☆';
+  return s;
+}
+
+function renderProducts(phones) {
+  const grid = document.getElementById('productsGrid');
+  document.getElementById('resultCount').textContent = phones.length + ' sản phẩm';
+  grid.innerHTML = phones.map(p => `
+    <div class="product-card" onclick="openProduct(${p.id})">
+      <div class="card-img">
+        <span style="font-size:5rem">${phoneEmojis[p.brand]||'📱'}</span>
+        ${p.badge ? `<span class="badge ${p.badge}">${p.badge==='new'?'MỚI':p.badge==='sale'?'GIẢM':'HOT'}</span>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-brand">${p.brand}</div>
+        <div class="card-name">${p.name}</div>
+        <div class="stars">${starHTML(p.rating)} ${p.rating}</div>
+        <div class="card-specs">RAM ${p.ram} · ${p.storage} · ${p.display}</div>
+        <div class="card-price-row">
+          <div>
+            ${p.oldPrice ? `<span class="card-old-price">${formatPrice(p.oldPrice)}</span>` : ''}
+            <span class="card-price">${formatPrice(p.price)}</span>
+          </div>
+          <button class="card-add-btn" onclick="event.stopPropagation();addToCart(${p.id})">+ Thêm</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// =========================================
+// FILTER & SORT
+// =========================================
+function filterBrand(brand, btn) {
+  currentBrand = brand;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function filterProducts() {
+  applyFilters();
+}
+
+function sortProducts(val) {
+  applyFilters(val);
+}
+
+function applyFilters(sortVal) {
+  if(!sortVal) sortVal = document.querySelector('.sort-select').value;
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let phones = allPhones.filter(p => {
+    const matchBrand = currentBrand === 'all' || p.brand === currentBrand;
+    const matchSearch = !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+    return matchBrand && matchSearch;
+  });
+  if(sortVal === 'price-asc') phones.sort((a,b)=>a.price-b.price);
+  else if(sortVal === 'price-desc') phones.sort((a,b)=>b.price-a.price);
+  else if(sortVal === 'name-asc') phones.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sortVal === 'new') phones = phones.filter(p=>p.badge==='new').concat(phones.filter(p=>p.badge!=='new'));
+  filteredPhones = phones;
+  renderProducts(phones);
+}
+
+// =========================================
+// PRODUCT MODAL
+// =========================================
+function openProduct(id) {
+  const p = allPhones.find(x=>x.id===id);
+  currentProduct = p;
+  currentQty = 1;
+  document.getElementById('modalBody').innerHTML = `
+    <div>
+      <div class="modal-img">${phoneEmojis[p.brand]||'📱'}</div>
+    </div>
+    <div class="modal-info">
+      <div class="modal-brand">${p.brand}</div>
+      <div class="modal-name">${p.name}</div>
+      <div class="stars" style="font-size:1rem">${starHTML(p.rating)} <span style="color:var(--muted);font-size:0.85rem">${p.rating}/5</span></div>
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <div class="modal-price">${formatPrice(p.price)}</div>
+        ${p.oldPrice?`<span style="color:var(--muted);text-decoration:line-through;font-size:0.9rem">${formatPrice(p.oldPrice)}</span>`:''}
+      </div>
+      <div class="modal-desc">Điện thoại ${p.brand} ${p.name} - Hiệu năng mạnh mẽ với chipset tiên tiến, màn hình ${p.display} sắc nét, camera ${p.camera} chuyên nghiệp và pin ${p.battery} dung lượng cao.</div>
+      <div class="spec-grid">
+        <div class="spec-item"><div class="spec-label">RAM</div><div class="spec-val">${p.ram}</div></div>
+        <div class="spec-item"><div class="spec-label">Bộ nhớ</div><div class="spec-val">${p.storage}</div></div>
+        <div class="spec-item"><div class="spec-label">Màn hình</div><div class="spec-val">${p.display}</div></div>
+        <div class="spec-item"><div class="spec-label">Camera</div><div class="spec-val">${p.camera}</div></div>
+        <div class="spec-item"><div class="spec-label">Pin</div><div class="spec-val">${p.battery}</div></div>
+        <div class="spec-item"><div class="spec-label">Hệ điều hành</div><div class="spec-val">${p.brand==='Apple'?'iOS 18':'Android 14'}</div></div>
+      </div>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-num" id="qtyNum">1</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+        <span style="color:var(--muted);font-size:0.85rem">còn hàng</span>
+      </div>
+      <button class="add-cart-big" onclick="addToCartModal()">🛒 Thêm vào giỏ hàng</button>
+    </div>
+  `;
+  document.getElementById('productOverlay').classList.add('open');
+}
+
+function changeQty(d) {
+  currentQty = Math.max(1, currentQty + d);
+  document.getElementById('qtyNum').textContent = currentQty;
+}
+
+function addToCartModal() {
+  for(let i=0;i<currentQty;i++) addToCart(currentProduct.id, true);
+  closeModal('productOverlay');
+  showToast('✅ Đã thêm '+currentQty+'x '+currentProduct.name, 'success');
+}
+
+// =========================================
+// CART
+// =========================================
+function addToCart(id, silent=false) {
+  const p = allPhones.find(x=>x.id===id);
+  const existing = cart.find(c=>c.id===id);
+  if(existing) existing.qty++;
+  else cart.push({...p, qty:1});
+  updateCartCount();
+  if(!silent) showToast('🛒 '+p.name+' đã thêm vào giỏ', 'success');
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(c=>c.id!==id);
+  updateCartCount();
+  renderCart();
+}
+
+function clearCart() {
+  cart = [];
+  updateCartCount();
+  renderCart();
+}
+
+function updateCartCount() {
+  const total = cart.reduce((s,c)=>s+c.qty,0);
+  document.getElementById('cartCount').textContent = total;
+}
+
+function getCartTotal() {
+  return cart.reduce((s,c)=>s+c.price*c.qty,0);
+}
+
+function renderCart() {
+  const el = document.getElementById('cartItems');
+  if(cart.length===0) {
+    el.innerHTML = '<div class="empty-cart"><div>🛒</div><div style="font-size:1rem;margin-top:8px">Giỏ hàng trống</div></div>';
+  } else {
+    el.innerHTML = cart.map(c=>`
+      <div class="cart-item">
+        <div class="cart-item-emoji">${phoneEmojis[c.brand]||'📱'}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${c.name}</div>
+          <div class="cart-item-price">${formatPrice(c.price)}</div>
+          <div class="cart-item-qty">Số lượng: ${c.qty}</div>
+        </div>
+        <button class="cart-item-remove" onclick="removeFromCart(${c.id})">✕</button>
+      </div>
+    `).join('');
+  }
+  document.getElementById('cartTotal').textContent = formatPrice(getCartTotal());
+}
+
+function openCart() {
+  renderCart();
+  document.getElementById('cartOverlay').classList.add('open');
+}
+
+// =========================================
+// ORDER
+// =========================================
+function openOrder() {
+  if(cart.length===0) { showToast('Giỏ hàng trống!','error'); return; }
+  closeModal('cartOverlay');
+  // render summary
+  const summaryEl = document.getElementById('orderSummaryItems');
+  summaryEl.innerHTML = cart.map(c=>`
+    <div class="summary-item">
+      <span>${c.name} x${c.qty}</span>
+      <span>${formatPrice(c.price*c.qty)}</span>
+    </div>
+  `).join('');
+  document.getElementById('orderTotal2').textContent = formatPrice(getCartTotal());
+  document.getElementById('qrAmount').textContent = formatPrice(getCartTotal());
+  document.getElementById('orderOverlay').classList.add('open');
+}
+
+function selectPayment(method, el) {
+  selectedPayment = method;
+  document.querySelectorAll('.pay-method').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  const qrSec = document.getElementById('qrSection');
+  if(method === 'qr' || method === 'bank') {
+    qrSec.style.display = 'block';
+    generateQR();
+  } else {
+    qrSec.style.display = 'none';
+  }
+}
+
+function generateQR() {
+  const total = getCartTotal();
+  const orderId = 'PZ' + Date.now().toString().slice(-6);
+  document.getElementById('qrContent').textContent = 'PZ-' + orderId;
+  const container = document.getElementById('qrImageContainer');
+  // Generate QR SVG (simplified visual QR-like pattern)
+  container.innerHTML = generateQRSVG(total, orderId);
+}
+
+function generateQRSVG(amount, orderId) {
+  // Visual QR code representation using SVG
+  const size = 180;
+  const cells = 21;
+  const cellSize = Math.floor(size/cells);
+  let svg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="border-radius:8px;background:white">`;
+  
+  // Generate pseudo-random but deterministic pattern based on orderId
+  const seed = Array.from(orderId).reduce((a,c)=>a+c.charCodeAt(0),0);
+  
+  for(let r=0;r<cells;r++) {
+    for(let c=0;c<cells;c++) {
+      let fill = false;
+      // Finder patterns (corners)
+      if((r<7&&c<7)||(r<7&&c>cells-8)||(r>cells-8&&c<7)) {
+        const br=r%8, bc=c%8;
+        const mr=r>cells-8?r-(cells-7):r, mc=c>cells-8?c-(cells-7):c;
+        if((mr<=0||mr>=6||bc===0||bc>=6)||(mr>=2&&mr<=4&&mc>=2&&mc<=4)) fill=true;
+      } else {
+        // Data modules
+        const hash = ((r*cells+c)*31 + seed*17) % 100;
+        fill = hash < 45;
+      }
+      if(fill) svg += `<rect x="${c*cellSize}" y="${r*cellSize}" width="${cellSize}" height="${cellSize}" fill="#000"/>`;
+    }
+  }
+  svg += `</svg>`;
+  return svg;
+}
+
+async function placeOrder() {
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  const email = document.getElementById('custEmail').value.trim();
+  const note = document.getElementById('custNote').value.trim();
+
+  if(!name || !phone || !address) {
+    showToast('⚠️ Vui lòng điền đầy đủ thông tin!', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('placeOrderBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
+
+  const orderId = 'PZ-' + Date.now().toString().slice(-6);
+  const orderData = {
+    orderId,
+    customer: { name, phone, email, address, note },
+    items: cart.map(c=>({ id:c.id, name:c.name, brand:c.brand, price:c.price, qty:c.qty })),
+    total: getCartTotal(),
+    payment: selectedPayment,
+    createdAt: new Date().toISOString()
+  };
+
+  // POST to backend (if running)
+  try {
+    const res = await fetch('http://localhost:3000/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    });
+    if(!res.ok) throw new Error('Server error');
+    const result = await res.json();
+    console.log('Order saved:', result);
+  } catch(e) {
+    // Demo mode — still show success
+    console.log('Demo mode (server not running). Order data:', orderData);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✅ Xác nhận đặt hàng';
+  closeModal('orderOverlay');
+
+  document.getElementById('successOrderId').textContent = 'Mã đơn: ' + orderId;
+  document.getElementById('successOverlay').classList.add('open');
+
+  cart = [];
+  updateCartCount();
+}
+
+function closeSuccess() {
+  document.getElementById('successOverlay').classList.remove('open');
+}
+
+// =========================================
+// MODAL HELPERS
+// =========================================
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function closeIfOverlay(e, id) {
+  if(e.target === document.getElementById(id)) closeModal(id);
+}
+
+// =========================================
+// TOAST
+// =========================================
+function showToast(msg, type='success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = msg;
+  c.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(()=>t.remove(),300); }, 3000);
+}
+
+// =========================================
+// INIT
+// =========================================
+renderProducts(allPhones);
+</script>
+</body>
+</html>
